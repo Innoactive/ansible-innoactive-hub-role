@@ -47,6 +47,12 @@
       traefik.http.routers.customization-alternative.middlewares: redirect-alternative-customization
       traefik.http.routers.customization-alternative.tls: "{{ letsencrypt | ternary('true', 'false') }}"
       traefik.http.routers.customization-alternative.tls.certresolver: lets-encrypt
+      
+      traefik.http.middlewares.customization_cors.headers.accesscontrolallowmethods: "GET,OPTIONS,PUT"
+      traefik.http.middlewares.customization_cors.headers.accesscontrolalloworigin: "*"
+      traefik.http.middlewares.customization_cors.headers.accesscontrolmaxage: "100"
+      traefik.http.middlewares.customization_cors.headers.addvaryheader: "true"
+      traefik.http.routers.customization-alternative.middlewares: "customization_cors"
 
       # POST / PUT / PATCH / DELETE (cannot be redirected, because of failing preflight requests)
       traefik.http.routers.customization-alternative-post.rule: Host({{ alias_customization_hostnames }}) && Method(`POST`,`PUT`,`PATCH`,`DELETE`,`OPTIONS`)
@@ -75,11 +81,6 @@
       traefik.http.routers.customization.rule: Host(`{{ customization_configuration.hostname }}`)
       traefik.http.routers.customization.tls: "{{ letsencrypt | ternary('true', 'false') }}"
       traefik.http.routers.customization.tls.certresolver: lets-encrypt
-      traefik.http.middlewares.customization_cors.headers.accesscontrolallowmethods: "GET,OPTIONS,PUT"
-      traefik.http.middlewares.customization_cors.headers.accesscontrolalloworigin: "*"
-      traefik.http.middlewares.customization_cors.headers.accesscontrolmaxage: "100"
-      traefik.http.middlewares.customization_cors.headers.addvaryheader: "true"
-      traefik.http.routers.customization.middlewares: "customization_cors"
     alternative_domain_labels: "{{ alternative_customization_hostnames_traefik_labels | default({}) }}"
     redirect_http_labels: "{{ http_redirect_traefik_labels | default({}) }}"
   docker_container:
