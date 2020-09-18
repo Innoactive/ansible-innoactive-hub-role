@@ -4,7 +4,7 @@ import json
 from microservices.models import HubService
 
 if HubService.objects.filter(name='{{ micro_frontend.name }}').exists() is False:
-    # create entry for customization micro frontend
+    # create entry for branding micro frontend
     HubService.objects.create(name='{{ micro_frontend.name }}',
         menu_entry_name='{{ micro_frontend.menu_entry_name }}',
         url_prefix='{{ micro_frontend.url_prefix }}',

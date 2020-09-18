@@ -21,48 +21,48 @@
         - hub_web
         - hub_channels
         - hub_portal
-        # - hub_customization # do not stop / or remove the customization service as we need to copy the data from within it
+        # - hub_branding # do not stop / or remove the branding service as we need to copy the data from within it
         - hub_db
         - hub_mq
         - hub_mailer
 
-    - name: Migrate Customization Service's media files
+    - name: Migrate Branding Service's media files
       vars:
-        new_volume_name: hub_customization_media
+        new_volume_name: hub_branding_media
       block:
-        - name: Check if named customization media volume is existing
+        - name: Check if named branding media volume is existing
           docker_volume_info:
             name: "{{ new_volume_name }}"
-          register: customization_volume_result
+          register: branding_volume_result
 
-        - name: Assert named customization volume does not exist
+        - name: Assert named branding volume does not exist
           debug:
             msg: Volume with name {{ new_volume_name }} already exists. Skipping to avoid potential dataloss.
-          when: customization_volume_result.exists
+          when: branding_volume_result.exists
 
-        - name: Migrate Customization media files
-          when: not customization_volume_result.exists
+        - name: Migrate Branding media files
+          when: not branding_volume_result.exists
           vars:
-            local_customization_media_path: /tmp/hub/customization/media
+            local_branding_media_path: /tmp/hub/branding/media
           block:
             - name: Copy media files to local directory
-              shell: mkdir -p /tmp/hub/customization && docker cp hub_customization:/usr/app/media {{ local_customization_media_path }}
+              shell: mkdir -p /tmp/hub/branding && docker cp hub_branding:/usr/app/media {{ local_branding_media_path }}
 
             - name: Create media files volume for service data
               docker_volume:
                 name: "{{ new_volume_name }}"
 
-            - name: Stop Customization service container (to prevent further writes)
+            - name: Stop Branding service container (to prevent further writes)
               docker_container:
-                name: hub_customization
+                name: hub_branding
                 state: stopped
                 comparisons: 
                   '*': ignore
               tags:
                 - production
 
-            - name: Copy old customization media files into newly created volume
-              shell: docker run --rm -t -v {{ local_customization_media_path }}:/from -v {{ new_volume_name }}:/to alpine cp -av /from/. /to/
+            - name: Copy old branding media files into newly created volume
+              shell: docker run --rm -t -v {{ local_branding_media_path }}:/from -v {{ new_volume_name }}:/to alpine cp -av /from/. /to/
 
     - name: Migrate data from anonymous TLS certificate volume to named volume
       block:
@@ -185,7 +185,7 @@
         - hub_web
         - hub_channels
         - hub_portal
-        - hub_customization
+        - hub_branding
         - hub_db
         - hub_mq
         - hub_mailer

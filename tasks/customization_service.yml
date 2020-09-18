@@ -1,92 +1,92 @@
 ---
-- name: Get Client Credentials for Customization Service
+- name: Get Client Credentials for Branding Service
   block:
     - name: Create / Determine existing client credentials in Application
       shell: "{{ lookup('template', 'run_in_django_shell.sh.j2') }}" # noqa 305
       vars:
         python_script_name: get_oauth_client_credentials
-        client_name: Discovery Portal Customization Service
-        client_id: "{{ customization_configuration.oauth2_client_id }}"
-        client_secret: "{{ customization_configuration.oauth2_client_secret }}"
+        client_name: Discovery Portal Branding Service
+        client_id: "{{ branding_configuration.oauth2_client_id }}"
+        client_secret: "{{ branding_configuration.oauth2_client_secret }}"
         redirect_uris:
-          - "{{ admin_configuration.protocol }}://%s/services/customization/hub/callback/' % '{{ admin_configuration.hostname }}"
-          - "{{ admin_configuration.protocol }}://%s/microservices/customization/hub/callback/' % '{{ admin_configuration.hostname }}"
-          - "{{ admin_configuration.protocol }}://%s/hub_services/customization/hub/callback/' % '{{ admin_configuration.hostname }}"
-          - "{{ admin_configuration.protocol }}://%s/hub/callback/' % '{{ customization_configuration.hostname }}"
-      register: customization_oauth2_client_output
-      changed_when: customization_oauth2_client_output.stdout | from_json | json_query('changed')
+          - "{{ admin_configuration.protocol }}://%s/services/branding/hub/callback/' % '{{ admin_configuration.hostname }}"
+          - "{{ admin_configuration.protocol }}://%s/microservices/branding/hub/callback/' % '{{ admin_configuration.hostname }}"
+          - "{{ admin_configuration.protocol }}://%s/hub_services/branding/hub/callback/' % '{{ admin_configuration.hostname }}"
+          - "{{ admin_configuration.protocol }}://%s/hub/callback/' % '{{ branding_configuration.hostname }}"
+      register: branding_oauth2_client_output
+      changed_when: branding_oauth2_client_output.stdout | from_json | json_query('changed')
       # ansible lint has an issue where it cannot bypass rules (like 305) within blocks
       # see https://github.com/ansible/ansible-lint/issues/484, so we need to explicitly skip
       tags:
         - skip_ansible_lint
         - requires_database
 
-    - name: Identify Client Id for Customization Service
+    - name: Identify Client Id for Branding Service
       set_fact:
-        customization_oauth2_client_id: "{{ customization_oauth2_client_output.stdout | from_json | json_query('client_id') }}"
-        customization_oauth2_client_secret: "{{ customization_oauth2_client_output.stdout | from_json | json_query('client_secret') }}"
+        branding_oauth2_client_id: "{{ branding_oauth2_client_output.stdout | from_json | json_query('client_id') }}"
+        branding_oauth2_client_secret: "{{ branding_oauth2_client_output.stdout | from_json | json_query('client_secret') }}"
 
 - name: Validate client credentials
   assert:
     that:
-      - customization_oauth2_client_id | default('', true) | length > 0
-      - customization_oauth2_client_secret | default('', true) | length > 0
+      - branding_oauth2_client_id | default('', true) | length > 0
+      - branding_oauth2_client_secret | default('', true) | length > 0
 
-- name: Create a volume to hold the customization files (images etc.)
+- name: Create a volume to hold the branding files (images etc.)
   docker_volume:
-    name: "{{ volume_names.customization }}"
+    name: "{{ volume_names.branding }}"
 
 - name: Support alternative hostnames
   set_fact:
-    alternative_customization_hostnames_traefik_labels:
+    alternative_branding_hostnames_traefik_labels:
       # redirect alternative domains to primary
-      traefik.http.middlewares.redirect-alternative-customization.redirectregex.regex: "(.*?://)([^/]+)(.*)"
-      traefik.http.middlewares.redirect-alternative-customization.redirectregex.replacement: "${1}{{ customization_configuration.hostname }}${3}"
-      traefik.http.routers.customization-alternative.rule: Host({{ alias_customization_hostnames }})
-      traefik.http.routers.customization-alternative.middlewares: redirect-alternative-customization
-      traefik.http.routers.customization-alternative.tls: "{{ letsencrypt | ternary('true', 'false') }}"
-      traefik.http.routers.customization-alternative.tls.certresolver: lets-encrypt
+      traefik.http.middlewares.redirect-alternative-branding.redirectregex.regex: "(.*?://)([^/]+)(.*)"
+      traefik.http.middlewares.redirect-alternative-branding.redirectregex.replacement: "${1}{{ branding_configuration.hostname }}${3}"
+      traefik.http.routers.branding-alternative.rule: Host({{ alias_branding_hostnames }})
+      traefik.http.routers.branding-alternative.middlewares: redirect-alternative-branding
+      traefik.http.routers.branding-alternative.tls: "{{ letsencrypt | ternary('true', 'false') }}"
+      traefik.http.routers.branding-alternative.tls.certresolver: lets-encrypt
 
       # API (cannot be redirected, because of failing CORS)
-      traefik.http.routers.customization-alternative-post.rule: Host({{ alias_customization_hostnames }}) && PathPrefix(`/api`)
-      traefik.http.routers.customization-alternative-post.tls: "{{ letsencrypt | ternary('true', 'false') }}"
-      traefik.http.routers.customization-alternative-post.tls.certresolver: lets-encrypt
+      traefik.http.routers.branding-alternative-post.rule: Host({{ alias_branding_hostnames }}) && PathPrefix(`/api`)
+      traefik.http.routers.branding-alternative-post.tls: "{{ letsencrypt | ternary('true', 'false') }}"
+      traefik.http.routers.branding-alternative-post.tls.certresolver: lets-encrypt
   vars:
-    # ensure alternative domains are supported in both old and new formats (old.domain and customization.portal.old.domain)
-    alternative_customization_hostnames: "{{ customization_configuration.alias_hostnames | map('regex_replace', '^(.*)$', '\\1') | list }}"
-    alias_customization_hostnames: "{{ alternative_customization_hostnames | map('regex_replace', '^(.*)$', '`\\1`') | join(',') }}"
-  when: customization_configuration.alias_hostnames | default([]) | length > 0
+    # ensure alternative domains are supported in both old and new formats (old.domain and branding.portal.old.domain)
+    alternative_branding_hostnames: "{{ branding_configuration.alias_hostnames | map('regex_replace', '^(.*)$', '\\1') | list }}"
+    alias_branding_hostnames: "{{ alternative_branding_hostnames | map('regex_replace', '^(.*)$', '`\\1`') | join(',') }}"
+  when: branding_configuration.alias_hostnames | default([]) | length > 0
 
-- name: Start Customization Service
+- name: Start Branding Service
   vars:
     default_environment_variables:
       API_ROOT: "{{ admin_configuration.protocol }}://{{ admin_configuration.hostname }}"
-      CUSTOMIZATION_API_ROOT: "{{ admin_configuration.protocol }}://{{ customization_configuration.hostname }}/api"
+      CUSTOMIZATION_API_ROOT: "{{ admin_configuration.protocol }}://{{ branding_configuration.hostname }}/api"
       DB_HOST: db
-      DB_NAME: customization
+      DB_NAME: branding
       DB_PASSWORD: postgres
       DB_USER: postgres
-      OAUTH_CLIENT_ID: "{{ customization_oauth2_client_id }}"
-      OAUTH_CLIENT_SECRET: "{{ customization_oauth2_client_secret }}"
-      VIRTUAL_HOST: "{{ ([customization_configuration.hostname] + customization_configuration.alias_hostnames) | join(',') | mandatory }}"
+      OAUTH_CLIENT_ID: "{{ branding_oauth2_client_id }}"
+      OAUTH_CLIENT_SECRET: "{{ branding_oauth2_client_secret }}"
+      VIRTUAL_HOST: "{{ ([branding_configuration.hostname] + branding_configuration.alias_hostnames) | join(',') | mandatory }}"
     traefik_labels:
       traefik.enable: "true"
-      traefik.http.routers.customization.rule: Host(`{{ customization_configuration.hostname }}`)
-      traefik.http.routers.customization.tls: "{{ letsencrypt | ternary('true', 'false') }}"
-      traefik.http.routers.customization.tls.certresolver: lets-encrypt
-    alternative_domain_labels: "{{ alternative_customization_hostnames_traefik_labels | default({}) }}"
+      traefik.http.routers.branding.rule: Host(`{{ branding_configuration.hostname }}`)
+      traefik.http.routers.branding.tls: "{{ letsencrypt | ternary('true', 'false') }}"
+      traefik.http.routers.branding.tls.certresolver: lets-encrypt
+    alternative_domain_labels: "{{ alternative_branding_hostnames_traefik_labels | default({}) }}"
     redirect_http_labels: "{{ http_redirect_traefik_labels | default({}) }}"
   docker_container:
-    name: "{{ container_names.customization }}"
-    image: "{{ image_versions.customization }}"
+    name: "{{ container_names.branding }}"
+    image: "{{ image_versions.branding }}"
     # pull image if version is latest
-    pull: "{{ (image_versions.customization | default(':', True)).split(':')[1] == 'latest' }}"
+    pull: "{{ (image_versions.branding | default(':', True)).split(':')[1] == 'latest' }}"
     restart_policy: unless-stopped
     volumes:
-      - "{{ volume_names.customization }}:/usr/app/media"
+      - "{{ volume_names.branding }}:/usr/app/media"
     exposed_ports:
       - "80"
-    env: "{{ default_environment_variables | combine(customization_configuration.extra_environment_variables) }}"
+    env: "{{ default_environment_variables | combine(branding_configuration.extra_environment_variables) }}"
     labels: "{{ traefik_labels | combine(alternative_domain_labels) }}"
     comparisons:
       # correctly recreate container when any environment variable or labels is changed or added / removed
@@ -99,7 +99,7 @@
 - name: Setup Database
   become: true
   # yamllint disable rule:line-length
-  command: "docker exec {{ container_names.customization }} python manage.py create_db"
+  command: "docker exec {{ container_names.branding }} python manage.py create_db"
   # yamllint enable rule:line-length
   when: admin_configuration.setup_database
   # TODO: technically, this is not correct, it should only be changed if database has been created for the first time
@@ -110,38 +110,38 @@
 - name: Run Database migrations
   become: true
   # yamllint disable rule:line-length
-  command: "docker exec {{ container_names.customization }} python manage.py migrate"
+  command: "docker exec {{ container_names.branding }} python manage.py migrate"
   # yamllint enable rule:line-length
   when: admin_configuration.setup_database
-  register: customization_migration_result
-  changed_when: '"Applying" in customization_migration_result.stdout'
+  register: branding_migration_result
+  changed_when: '"Applying" in branding_migration_result.stdout'
   tags:
     - setup_tasks
 
-- name: Collect static files for Customization Service
+- name: Collect static files for Branding Service
   become: true
   # yamllint disable rule:line-length
-  command: "docker exec {{ container_names.customization }} python manage.py collectstatic -v 0 -c --no-input"
+  command: "docker exec {{ container_names.branding }} python manage.py collectstatic -v 0 -c --no-input"
   # yamllint enable rule:line-length
   # TODO: technically, this is not correct, it should only be changed if no files are collected
   changed_when: false
   tags:
     - setup_tasks
 
-- name: Enable Customization Micro Frontend
+- name: Enable Branding Micro Frontend
   become: true
   shell: "{{ lookup('template', 'run_in_django_shell.sh.j2') }}" # noqa 305
   vars:
     python_script_name: enable_micro_frontend
     micro_frontend:
-      name: Discovery Portal Customization
-      menu_entry_name: Customization
-      url_prefix: customization
+      name: Discovery Portal Branding
+      menu_entry_name: Branding
+      url_prefix: branding
       fa_icon: paint-brush
-      script_url: "{{ admin_configuration.protocol }}://{{ customization_configuration.hostname }}/main.js"
-      init_function: customizationAppRender
-  register: customization_micro_frontend_raw
-  changed_when: customization_micro_frontend_raw.stdout | trim | bool
+      script_url: "{{ admin_configuration.protocol }}://{{ branding_configuration.hostname }}/main.js"
+      init_function: brandingAppRender
+  register: branding_micro_frontend_raw
+  changed_when: branding_micro_frontend_raw.stdout | trim | bool
   when: ('latest' in hub_image_version) or (hub_image_version is version('1.20.0', '>='))
   tags:
     - setup_tasks

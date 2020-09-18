@@ -57,13 +57,13 @@ Alternative or legacy hostnames array. Users accessing it will be redirected to 
 
 Alternative or legacy hostnames array. Users accessing it will be redirected to admin_hostname.
 
-    customization_hostname:
+    branding_hostname:
 
-**Mandatory** hostname under shich the customization service will be available.
+**Mandatory** hostname under shich the branding service will be available.
 
-    customization_alias_hostnames: []
+    branding_alias_hostnames: []
 
-Alternative or legacy hostnames array. Users accessing it will be redirected to customization_hostname.
+Alternative or legacy hostnames array. Users accessing it will be redirected to branding_hostname.
 
     secret_key:
 
@@ -259,27 +259,27 @@ DSN for [Sentry](https://sentry.io/welcome/) to automatically track runtime erro
 
 Optional mapping of additional environment variables to be passed on to the Portal (e.g. to unlock hidden features).
 
-#### Innoactive Customization Service (for Discovery Portal)
+#### Innoactive Branding Service (for Discovery Portal)
 
-    setup_customization_service: true
+    setup_branding_service: true
 
-Whether or not to setup the customization service for this instance.
+Whether or not to setup the branding service for this instance.
 
-    customization_hostname: "{{ customization_configuration.hostname  }}"
+    branding_hostname: "{{ branding_configuration.hostname  }}"
 
-The hostname under which the customization service should be publicly availabe. This defaults to `customization.<hostname-of-hub-instance>`.
+The hostname under which the branding service should be publicly availabe. This defaults to `branding.<hostname-of-hub-instance>`.
 
-    customization_oauth_client_id:
+    branding_oauth_client_id:
 
 Allows to explicitly define the oauth client id to be used by the portal to communicate with the Hub. If not defined,
 an oauth client will automatically be retrieved.
 
-    customization_oauth_client_secret:
+    branding_oauth_client_secret:
 
 Allows to explicitly define the oauth client secret to be used by the portal to communicate with the Hub. If not defined,
 an oauth client will automatically be retrieved.
 
-    customization_extra_environment_variables: {}
+    branding_extra_environment_variables: {}
 
 Optional mapping of additional environment variables to be passed on to the Hub (e.g. to unlock hidden features).
 
@@ -344,7 +344,7 @@ The available Tags are:
   - _ssl_ Controls whether or not the Let's Encrypt service will be set up
   - _reverse_proxy_ Controls whether or not the discovery portal service will be set up
   - _discovery_portal_ Controls whether or not to start the reverse proxy service
-  - _customization_ Controls whether or not the customization service for the discovery portal will be set up
+  - _branding_ Controls whether or not the branding service for the discovery portal will be set up
 
 - _setup_tasks_ Controls whether or not to run any setup tasks like database migrations, collection of static files, etc.
 
@@ -378,7 +378,7 @@ users too:
             admin_email: admin@innoactive.de
             portal_hostname: portal.my.hostname.com
             admin_hostname: admin.portal.my.hostname.com
-            customization_hostname: customization.portal.my.hostname.com
+            branding_hostname: branding.portal.my.hostname.com
 
 ## Upgrading from 1.x to 2.x
 

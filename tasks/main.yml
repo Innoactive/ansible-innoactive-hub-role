@@ -39,13 +39,13 @@
     - setup_tasks
     - launcher
 
-- name: Setup Hub Customization Service
+- name: Setup Hub Branding Service
   become: true
-  import_tasks: customization_service.yml
-  when: admin_configuration.setup_customization_service
+  import_tasks: branding_service.yml
+  when: admin_configuration.setup_branding_service
   tags:
     - services
-    - customization
+    - branding
 
 - name: Setup Hub Discovery Portal
   become: true
