@@ -61,7 +61,7 @@
   vars:
     default_environment_variables:
       API_ROOT: "{{ admin_configuration.protocol }}://{{ admin_configuration.hostname }}"
-      CUSTOMIZATION_API_ROOT: "{{ admin_configuration.protocol }}://{{ branding_configuration.hostname }}/api"
+      BRANDING_API_ROOT: "{{ admin_configuration.protocol }}://{{ branding_configuration.hostname }}/api"
       DB_HOST: db
       DB_NAME: branding
       DB_PASSWORD: postgres
